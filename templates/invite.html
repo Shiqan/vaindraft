@@ -1,0 +1,63 @@
+@if( $state == 1 )
+  <div class="col-sm-6">
+    <div class="card bg-transparent border-dark h-100">
+      <div class="card-body text-white">
+        <h5 class="card-title"> {{ $team }} </h5>
+        <p class="card-text"> {{ $langConfig -> getValue('draft.share.link') }}.</p>
+        @if($mode == -1)
+          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-left">
+        @elseif($mode == 1)
+          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-right">
+        @endif
+        <button class="btn btn-outline-primary btn-copy-team-url" data-url="/draft/join?id={{ $id }}" data-side="{{ $mode }}"><i class="fa fa-share-alt" aria-hidden="true"></i> {{ $langConfig -> getValue('common.cta.copy') }}</button>
+      </div>
+    </div>
+  </div>
+
+@elseif ($state == 2)
+  @if(!$draftState)
+  <div class="col-sm-6">
+    <div class="card h-100 bg-transparent border-success">
+      <div class="card-body text-success">
+        <h5 class="card-title"> {{ $team }} </h5>
+        <a href="#" class="btn btn-success"> {{ $langConfig -> getValue('common.label.joined') }} </a>
+      </div>
+    </div>
+  </div>
+  @else
+  <div class="col-sm-6">
+    <div class="card bg-transparent border-dark h-100">
+      <div class="card-body text-white">
+        <h5 class="card-title"> {{ $team }} </h5>
+        <p class="card-text"> {{ $langConfig -> getValue('draft.share.link') }}.</p>
+        @if($mode == -1)
+          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-left">
+        @elseif($mode == 1)
+          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-right">
+        @endif
+        <button class="btn btn-outline-primary btn-copy-team-url" data-url="/draft/join?id={{ $id }}" data-side="{{ $mode }}"><i class="fa fa-share-alt" aria-hidden="true"></i> {{ $langConfig -> getValue('common.cta.copy') }}</button>
+      </div>
+    </div>
+  </div>
+  @endif
+
+@elseif ($state == 3)
+  <div class="col-sm-6">
+    <div class="card h-100 bg-transparent border-success">
+      <div class="card-body text-success">
+        <h5 class="card-title"> {{ $team }} </h5>
+        <a href="#" class="btn btn-success"> {{ $langConfig -> getValue('common.label.joined') }} </a>
+      </div>
+    </div>
+  </div>
+
+@elseif ($state > 3)
+  <!-- in progress mode -->
+  <div class="col-sm-6">
+    <div class="card bg-transparent h-100 @if($mode == -1) border-team-left text-team-left @else border-team-right text-team-right @endif">
+      <div class="card-body">
+        <h4 class="card-title"> {{ $team }} </h4>
+      </div>
+    </div>
+  </div>
+@endif
