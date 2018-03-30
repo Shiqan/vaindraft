@@ -16,7 +16,6 @@ $(document).ready(function() {
     $(".hero-select").on("click", function() {
       if ($(this).hasClass("hero-highlight")) {
         newMessage($(this).data('hero'));
-        lockHero(this);
       } else {
         $(this).addClass("hero-highlight");
       }
@@ -35,6 +34,7 @@ var updater = {
     socket: null,
 
     start: function() {
+        // TODO get websocket url from backend
         var url = "ws://" + location.host + "/chatsocket/" + room + "/" + role + "/" + draft_style;
         updater.socket = new WebSocket(url);
         updater.socket.onmessage = function(event) {
@@ -43,15 +43,40 @@ var updater = {
     },
 
     showMessage: function(message) {
-        var draft_item = $(".draft-item > img[data-order='"+message.index+"']");
-        var hero_select = $(".hero-select[data-hero='"+message.hero+"']");
-
-        $(draft_item).attr('src', '/static/images/heroes/'+message.hero+'.png');
-        lockHero(hero_select);
+        if (message.type == "message") {
+            // TODO toaster
+            removeHeroHighlight();
+        }
+        
+        else if (message.type == "update") {
+            updateDraft(message.message, message.index);
+        }
+        
+        else if (message.type == "history") {
+            updateHistory(message.message);
+        }
     }
 };
 
 
-function lockHero(element) {
-  $(element).removeClass("hero-select hero-highlight").addClass("hero-locked").off("click");
+function lockHero(hero) {
+  $(hero).removeClass("hero-select hero-highlight").addClass("hero-locked").off("click");
+}
+
+function removeHeroHighlight() {
+  $(".hero-select").removeClass("hero-highlight");
+}
+
+function updateDraft(hero, index) {
+    var draft_item = $(".draft-item > img[data-order='"+index+"']");
+    var hero_select = $(".hero-select[data-hero='"+hero+"']");
+    
+    $(draft_item).attr('src', '/static/images/heroes/'+hero+'.png');
+    lockHero(hero_select);
+}
+
+function updateHistory(draftHistory) {
+    for (let i of draftHistory) {
+        updateDraft(i.message, i.index);
+    }
 }
