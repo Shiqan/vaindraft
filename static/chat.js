@@ -1,17 +1,6 @@
-// Copyright 2009 FriendFeed
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License. You may obtain
-// a copy of the License at
+// Copyright 2018 Shiqan
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-// License for the specific language governing permissions and limitations
-// under the License.
-
 $(document).ready(function() {
     $(".hero-select").on("click", function() {
       if ($(this).hasClass("hero-highlight")) {
@@ -35,7 +24,7 @@ var updater = {
 
     start: function() {
         // TODO get websocket url from backend
-        var url = "ws://" + location.host + "/chatsocket/" + room + "/" + role + "/" + draft_style;
+        var url = "ws://" + location.host + "/chatsocket/" + hash;
         updater.socket = new WebSocket(url);
         updater.socket.onmessage = function(event) {
             updater.showMessage(JSON.parse(event.data));
@@ -47,11 +36,11 @@ var updater = {
             // TODO toaster
             removeHeroHighlight();
         }
-        
+
         else if (message.type == "update") {
             updateDraft(message.message, message.index);
         }
-        
+
         else if (message.type == "history") {
             updateHistory(message.message);
         }
@@ -70,7 +59,7 @@ function removeHeroHighlight() {
 function updateDraft(hero, index) {
     var draft_item = $(".draft-item > img[data-order='"+index+"']");
     var hero_select = $(".hero-select[data-hero='"+hero+"']");
-    
+
     $(draft_item).attr('src', '/static/images/heroes/'+hero+'.png');
     lockHero(hero_select);
 }

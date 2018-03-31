@@ -1,18 +1,7 @@
 #!/usr/bin/env python
 #
-# Copyright 2009 Facebook
+# Copyright 2018 Shiqan
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
 """Simplified chat demo for websockets.
 
 Authentication, error handling, etc are left as an exercise for the reader :)
@@ -25,8 +14,10 @@ import tornado.options
 import tornado.web
 import tornado.websocket
 import os.path
-import uuid
 import json
+import secrets
+from cryptography.fernet import Fernet
+from cryptography.fernet import InvalidToken
 
 from tornado.options import define, options
 from tornado import gen
@@ -78,45 +69,47 @@ heroes = [
     'vox',
 ]
 
-# TODO Remove need of including index
-draft_styles = {
-    '1': [
-            {'index': 1, 'side': '1', 'type': 'ban'},
-            {'index': 2, 'side': '2', 'type': 'ban'},
-            {'index': 3, 'side': '2', 'type': 'ban'},
-            {'index': 4, 'side': '1', 'type': 'ban'},
-            {'index': 5, 'side': '1', 'type': 'pick'},
-            {'index': 6, 'side': '2', 'type': 'pick'},
-        ],
-}
+# TODO move to class
+key = Fernet.generate_key()
+f = Fernet(key)
+
+# TODO move to Redis
+draft_states = {}
 
 # TODO consistency with role / side / team
+# TODO conistency with message / event / chat
 class DraftState():
-    def __init__(self, style):
+    def __init__(self, style, team_blue, team_red):
         self.style = style
+        self.team_blue = team_blue
+        self.team_red = team_red
         self.turn = 0
         self.history = []
         self.bonus_time = [{'side': '1', 'bonus_time': 60}, {'side': '2', 'bonus_time': 60}]
 
-    def get_id(self):
-        return self.style
+    def get_team_blue(self):
+        return self.team_blue
+
+    def get_team_red(self):
+        return self.team_red
 
     def get_style(self):
-        return draft_styles[self.style]
+        # TODO Remove need of including index
+        return self.style
 
     def get_history(self):
         return self.history
 
     def get_turn(self):
         return self.turn
-        
+
     def get_bonus_time(self, team):
         # TODO make this nicer
         return [i for i in self.bonus_time if i['side'] == team][0]
 
     def has_bonustime_left(self, team):
         return self.get_bonus_time(team) > 0
-        
+
     def next_turn(self):
         self.turn += 1
 
@@ -125,10 +118,10 @@ class DraftState():
         self.history.append(event)
 
     def is_turn(self, team):
-        return draft_styles[self.style][self.turn]['side'] == team
+        return self.style[self.turn]['side'] == team
 
     def is_ended(self):
-        return self.turn >= len(draft_styles[self.style])
+        return self.turn >= len(self.style)
 
     def to_dict(self):
         return self.__dict__
@@ -138,14 +131,13 @@ class DraftState():
             sort_keys=True, indent=4)
 
 
+# TODO change chatsocket to draft socket...
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            # TODO draft initializer
             (r"/", MainHandler),
-            (r"/draft/([a-zA-Z0-9]*)/([a-zA-Z0-9]*)/([a-zA-Z0-9]*)$", MainHandler),
-            (r"/chatsocket", ChatSocketHandler),
-            (r"/chatsocket/([a-zA-Z0-9]*)/([a-zA-Z0-9]*)/([a-zA-Z0-9]*)$", ChatSocketHandler),
+            (r"/draft/([a-zA-Z0-9-_=]*)$", DraftHandler),
+            (r"/chatsocket/([a-zA-Z0-9-_=]*)$", ChatSocketHandler),
         ]
         settings = dict(
             cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
@@ -161,72 +153,112 @@ class MainHandler(tornado.web.RequestHandler):
     """
     Main request handler for the root path and for chat rooms.
     """
+    def get(self):
+        self.render("index.html", heroes=heroes)
 
-    @tornado.web.asynchronous
-    def get(self, room=None, role=None, draft_style=None):
-        if not room:
-            # TODO generate room
-            self.redirect("/draft/1")
+    def post(self):
+        team_blue = self.get_argument('teamBlue')
+        team_red = self.get_argument('teamRed')
+        draft = self.get_argument('draftField')
+
+        # TODO foolproofiy / validate beforehand
+        style = json.loads(draft)
+        room = secrets.token_urlsafe(16)
+
+        string_spec = "{room}|{role}".format(room=room, role='0')
+        hash_spec = f.encrypt(str.encode(string_spec))
+
+        string_blue = "{room}|{role}".format(room=room, role='1')
+        hash_blue = f.encrypt(str.encode(string_blue))
+
+        string_red = "{room}|{role}".format(room=room, role='2')
+        hash_red = f.encrypt(str.encode(string_red))
+
+        if options.debug:
+            url = "localhost:"+ str(options.port) + "/draft/{}"
+        else:
+            url = "https://vaindraft.herokuapp.com/draft/{}"
+
+
+        if room not in draft_states:
+            draft_states[room] = DraftState(style, team_blue, team_red)
+
+        self.render('invite.html', spectators=url.format(hash_spec.decode()), team_blue=url.format(hash_blue.decode()), team_red=url.format(hash_red.decode()))
+
+
+class DraftHandler(tornado.web.RequestHandler):
+    def get(self, hash=None):
+        if not hash:
+            self.redirect('/')
             return
-           
-        # TODO Why am I setting instance variables?
-        self.room = str(room)
-        self.role = str(role)
-        self.draft_state = DraftState(str(draft_style))
 
-        self.render("index.html", messages=[], room=self.room, role=self.role, draft_style_id=self.draft_state.get_id() , draft_style=self.draft_state.get_style(), heroes=heroes)
+        # TODO DRY it
+        try:
+            decrypted = f.decrypt(str.encode(hash)).decode()
+        except (InvalidToken) as e:
+            self.redirect('/')
+            return
+
+        room, role = decrypted.split("|")
+
+        draft_state = draft_states[room]
+        self.render("draft.html", hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=heroes)
 
 
-# TODO timers 
+# TODO timers
 class ChatSocketHandler(tornado.websocket.WebSocketHandler):
     """
     Handler for dealing with websockets. It receives, stores and distributes new messages.
     """
     waiters = {}
-    draft_states = {}
 
     @gen.engine
-    def open(self, room=None, role=None, draft_style=None):
+    def open(self, hash=None):
         """
         Called when socket is opened.
         """
-        
+
+        if not hash:
+            self.send_update(self, self.create_message("error", "No room specified"))
+            self.close()
+            return
+
+        try:
+            decrypted = f.decrypt(str.encode(hash)).decode()
+        except (InvalidToken) as e:
+            self.redirect('/')
+            self.close()
+            return
+
+        room, role = decrypted.split("|")
+
         if not room:
             self.send_update(self, self.create_message("error", "No room specified"))
             self.close()
-            return        
-            
+            return
+
         if not role:
             self.send_update(self, self.create_message("error", "No role specified"))
             self.close()
             return
-            
-        if not role:
-            self.send_update(self, self.create_message("error", "No draft style specified"))
-            self.close()
-            return
-            
-        self.room = str(room)
-        self.role = str(role)
 
-        if room in self.waiters:
-            if role in [client['role'] for client in self.waiters[room]]:
+        self.room = room
+        self.role = role
+
+        if room in ChatSocketHandler.waiters:
+            if role in [client['role'] for client in ChatSocketHandler.waiters[room]]:
                 logging.info('Error: Role already specified')
                 # TODO specify which roles are limited
                 self.send_update(self, self.create_message("error", "Role already specified"))
                 self.room = None
                 self.close()
             else:
-                self.waiters[room].append({'waiter': self, 'role': self.role})
-                draft_state = self.draft_states[room]
+                ChatSocketHandler.waiters[room].append({'waiter': self, 'role': self.role})
+                draft_state = draft_states[room]
                 message = draft_state.get_history()
                 self.send_update(self, self.create_message("history", message))
         else:
-            self.waiters[room] = [{'waiter': self, 'role': self.role}]
-
-        if room not in self.draft_states:
-            self.draft_states[room] = DraftState(draft_style)
-
+            ChatSocketHandler.waiters[room] = [{'waiter': self, 'role': self.role}]
 
     @classmethod
     def send_updates(cls, room, message):
@@ -255,7 +287,7 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         logging.info('Received new message %r', message)
         # TODO validate message
 
-        draft_state = self.draft_states[self.room]
+        draft_state = draft_states[self.room]
         logging.info('Draft state: %s', draft_state.to_json())
 
         if not draft_state.is_turn(self.role):
@@ -269,14 +301,14 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
         event['index'] = draft_state.get_turn()
         self.send_updates(self.room, event)
-        
+
         if draft_state.is_ended():
             logging.info('Draft has ended')
             self.send_updates(self.room, self.create_message("message", "Draft has ended"))
             self.close()
             return
-            
-        self.draft_states[self.room] = draft_state
+
+        draft_states[self.room] = draft_state
 
     def on_close(self):
         """
@@ -290,8 +322,8 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
             self.waiters[self.room].remove(client)
 
         if not self.waiters[self.room]:
-            del self.waiters[self.room]      
-            
+            del self.waiters[self.room]
+
     def create_message(self, type, message):
         event = {
             'time': str(datetime.now()),

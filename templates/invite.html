@@ -1,63 +1,41 @@
-@if( $state == 1 )
-  <div class="col-sm-6">
-    <div class="card bg-transparent border-dark h-100">
-      <div class="card-body text-white">
-        <h5 class="card-title"> {{ $team }} </h5>
-        <p class="card-text"> {{ $langConfig -> getValue('draft.share.link') }}.</p>
-        @if($mode == -1)
-          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-left">
-        @elseif($mode == 1)
-          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-right">
-        @endif
-        <button class="btn btn-outline-primary btn-copy-team-url" data-url="/draft/join?id={{ $id }}" data-side="{{ $mode }}"><i class="fa fa-share-alt" aria-hidden="true"></i> {{ $langConfig -> getValue('common.cta.copy') }}</button>
-      </div>
-    </div>
-  </div>
+{% extends "_layout.html" %}
 
-@elseif ($state == 2)
-  @if(!$draftState)
-  <div class="col-sm-6">
-    <div class="card h-100 bg-transparent border-success">
-      <div class="card-body text-success">
-        <h5 class="card-title"> {{ $team }} </h5>
-        <a href="#" class="btn btn-success"> {{ $langConfig -> getValue('common.label.joined') }} </a>
-      </div>
-    </div>
-  </div>
-  @else
-  <div class="col-sm-6">
-    <div class="card bg-transparent border-dark h-100">
-      <div class="card-body text-white">
-        <h5 class="card-title"> {{ $team }} </h5>
-        <p class="card-text"> {{ $langConfig -> getValue('draft.share.link') }}.</p>
-        @if($mode == -1)
-          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-left">
-        @elseif($mode == 1)
-          <input type="text" value="" id="myInput" class="id-placeholder-copy-url-right">
-        @endif
-        <button class="btn btn-outline-primary btn-copy-team-url" data-url="/draft/join?id={{ $id }}" data-side="{{ $mode }}"><i class="fa fa-share-alt" aria-hidden="true"></i> {{ $langConfig -> getValue('common.cta.copy') }}</button>
-      </div>
-    </div>
-  </div>
-  @endif
+{% block content %}
+  <header class="header">
+    <section class="container">
+        <div class="row">
+          <div class="column">
+            <label for="teamBlue">Team Blue</label>
+            <input type="text" value="{{ team_blue }}" name="teamBlue">
+          </div>
 
-@elseif ($state == 3)
-  <div class="col-sm-6">
-    <div class="card h-100 bg-transparent border-success">
-      <div class="card-body text-success">
-        <h5 class="card-title"> {{ $team }} </h5>
-        <a href="#" class="btn btn-success"> {{ $langConfig -> getValue('common.label.joined') }} </a>
-      </div>
-    </div>
-  </div>
+          <div class="column">
+            <label for="teamRed">Team Red</label>
+            <input type="text" value="{{ team_red }}" name="teamRed">
+          </div>
+        </div>
 
-@elseif ($state > 3)
-  <!-- in progress mode -->
-  <div class="col-sm-6">
-    <div class="card bg-transparent h-100 @if($mode == -1) border-team-left text-team-left @else border-team-right text-team-right @endif">
-      <div class="card-body">
-        <h4 class="card-title"> {{ $team }} </h4>
-      </div>
-    </div>
-  </div>
-@endif
+        <div class="column">
+          <label for="teamRed"> Spectators </label>
+          <input type="text" value="{{ spectators }}" name="teamRed">
+        </div>
+    </section>
+  </header>
+
+  <section class="container" id="why">
+    <h3 class="title">Why it's awesome</h3>
+    <p>Milligram provides a minimal setup of styles for a fast and clean starting point. Just it! <strong>Only 2kb gzipped!</strong> It's not about a UI framework. Specially designed for better performance and higher productivity with fewer properties to reset resulting in cleaner code. Hope you enjoy!</p>
+  </section>
+
+  <section class="container" id="getting-started">
+    <h3 class="title">Getting Started</h3>
+    <p class="description">There are some ways to get started. First, see all download options available below, then choose the most suitable option for your need. Now you should add the main file of the Milligram and the CSS Reset in the header of your project. Just that!</p>
+    <p><a class="button download" href="https://github.com/milligram/milligram/archive/v1.3.0.zip" title="Download Milligram">Download Milligram</a></p>
+    <div class="example"><p><strong>Install with Bower</strong></p><p>Milligram is available to install using Bower.</p></div>
+    <pre class="code prettyprint prettyprinted" style="">
+      <code class="code-content">
+        <span class="pln">$ bower install milligram</span>
+      </code>
+    </pre>
+</section>
+{% end %}

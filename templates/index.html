@@ -1,101 +1,53 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Tornado Chat Demo</title>
-    <link rel="stylesheet" href="{{ static_url("chat.min.css") }}" type="text/css">
-    
-    
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.css">
-    <link rel="stylesheet" href="{{ static_url("milligram.min.css") }}" type="text/css">
-  </head>
-  <body>   
+{% extends "_layout.html" %}
 
-		<main class="wrapper">
-            <nav class="navigation">
-				<section class="container">
-					<a class="navigation-title" href="https://milligram.github.io/">
-						<svg class="img" version="1.1" viewBox="0 0 463 669">
-							<g transform="translate(0.000000,669.000000) scale(0.100000,-0.100000)">
-								<path d="M2303 6677c-11-13-58-89-393-627-128-206-247-397-265-425-18-27-85-135-150-240-65-104-281-451-480-770-358-575-604-970-641-1032-10-18-45-74-76-126-47-78-106-194-107-212-1-3-11-26-24-53-60-118-132-406-157-623-19-158-8-491 20-649 82-462 291-872 619-1213 192-199 387-340 646-467 335-165 638-235 1020-235 382 0 685 70 1020 235 259 127 454 268 646 467 328 341 537 751 619 1213 28 158 39 491 20 649-25 217-97 505-157 623-13 27-23 50-23 53 0 16-57 127-107 210-32 52-67 110-77 128-37 62-283 457-641 1032-199 319-415 666-480 770-65 105-132 213-150 240-18 28-137 219-265 425-354 570-393 630-400 635-4 3-12-1-17-8zm138-904c118-191 654-1050 1214-1948 148-236 271-440 273-452 2-13 8-23 11-23 14 0 72-99 125-212 92-195 146-384 171-598 116-974-526-1884-1488-2110-868-205-1779 234-2173 1046-253 522-257 1124-10 1659 45 97 108 210 126 225 4 3 9 13 13 22 3 9 126 209 273 445 734 1176 1102 1766 1213 1946 67 108 124 197 126 197 2 0 59-89 126-197zM1080 3228c-75-17-114-67-190-243-91-212-128-368-137-580-34-772 497-1451 1254-1605 77-15 112-18 143-11 155 35 212 213 106 329-32 36-62 48-181 75-223 50-392 140-552 291-115 109-178 192-242 316-101 197-136 355-128 580 3 111 10 167 30 241 30 113 80 237 107 267 11 12 20 26 20 32 0 6 8 22 17 36 26 41 27 99 3 147-54 105-142 149-250 125z"></path>
-							</g>
-						</svg>
-						<h1 class="title"> Vaindraft </h1>
-					</a>
-                   
-					<a href="https://github.com/Shiqan/vaindraft" title="Vaindraft on Github" target="_blank">
-						<svg class="octocat" viewBox="0 0 250 250"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path class="octocat-arm" d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"></path><path class="octocat-body" d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"></path></svg>
-					</a>
-				</section>
-			</nav>
-            
-            <header class="header">
-                <section class="container">
-                    <form>
-                      <fieldset>
-                        <label for="nameField">Name</label>
-                        <input type="text" placeholder="CJ Patoilo" id="nameField">
-                        <label for="ageRangeField">Age Range</label>
-                        <select id="ageRangeField">
-                          <option value="0-13">0-13</option>
-                          <option value="14-17">14-17</option>
-                          <option value="18-23">18-23</option>
-                          <option value="24+">24+</option>
-                        </select>
-                        <label for="commentField">Comment</label>
-                        <textarea placeholder="Hi CJ …" id="commentField"></textarea>
+{% block content %}
+  <header class="header">
+    <section class="container">
+      <form method="post">
+        <div class="row">
+          <fieldset class="column">
+            <label for="teamBlue">Team Blue</label>
+            <input type="text" placeholder="Blue" name="teamBlue">
+          </fieldset>
 
-                        <input class="button button-outline" type="submit" value="Getting Started">
-                      </fieldset>
-                    </form>
-                </section>
-            </header>
-            
-            <section class="draft">
-                <div class="row">                   
-                  <div class="column column-25">
-                    team left
-                    {% for item in [i for i in draft_style if i['side'] == '1'] %}
-                      {% include "draft_item.html" %}
-                    {% end %}
-                  </div>
-                <!-- {% if role == 1 %}
-                  <div class="draft-background-left"> </div>
-                {% elif role == 2 %}
-                  <div class="draft-background-right"> </div>
-                {% else %}
-                  <div class="draft-background-spec"> </div>
-                {% end %} -->
-                  <div class="column column-50">
-                    {% for hero in heroes %}
-                      {% include "hero.html" %}
-                    {% end %}
-                  </div>
+          <fieldset class="column">
+            <label for="teamRed">Team Red</label>
+            <input type="text" placeholder="Red" name="teamRed">
+          </fieldset>
+        </div>
 
-                  <div class="column column-25">
-                    team right
-                    {% for item in [i for i in draft_style if i['side'] == '2'] %}
-                      {% include "draft_item.html" %}
-                    {% end %}
-                  </div>
-                </div>
-            </section>
-            
-            <footer class="footer">
-				<section class="container">
-                    <strong>Perhaps a tactic or two would help here?</strong>
-                    <p>Licensed under the <a target="_blank" href="https://github.com/Shiqan/vaindraft#license" title="MIT License">MIT License</a>.</p>
-				</section>
-			</footer>
-    </main>
-    
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" type="text/javascript"></script>
-    <script>
-      const room = "{{ room }}";
-      const role = "{{ role }}";
-      const draft_style = "{{ draft_style_id }}";
-    </script>
-    <script src="{{ static_url("chat.js") }}" type="text/javascript"></script>
-  </body>
-</html>
+        <fieldset>
+          <label for="draftField">Construct your Draft</label>
+          <textarea name="draftField" rows="5">[
+                          {"index": 1, "side": "1", "type": "ban"},
+                          {"index": 2, "side": "2", "type": "ban"},
+                          {"index": 3, "side": "2", "type": "ban"},
+                          {"index": 4, "side": "1", "type": "ban"},
+                          {"index": 5, "side": "1", "type": "pick"},
+                          {"index": 6, "side": "2", "type": "pick"}
+                      ]</textarea>
+          <input class="button button-outline" type="submit" value="Get Started">
+        </fieldset>
+
+        {% module xsrf_form_html() %}
+      </form>
+    </section>
+  </header>
+
+  <section class="container" id="why">
+    <h3 class="title">Why it's awesome</h3>
+    <p>Milligram provides a minimal setup of styles for a fast and clean starting point. Just it! <strong>Only 2kb gzipped!</strong> It's not about a UI framework. Specially designed for better performance and higher productivity with fewer properties to reset resulting in cleaner code. Hope you enjoy!</p>
+  </section>
+
+  <section class="container" id="getting-started">
+    <h3 class="title">Getting Started</h3>
+    <p class="description">There are some ways to get started. First, see all download options available below, then choose the most suitable option for your need. Now you should add the main file of the Milligram and the CSS Reset in the header of your project. Just that!</p>
+    <p><a class="button download" href="https://github.com/milligram/milligram/archive/v1.3.0.zip" title="Download Milligram">Download Milligram</a></p>
+    <div class="example"><p><strong>Install with Bower</strong></p><p>Milligram is available to install using Bower.</p></div>
+    <pre class="code prettyprint prettyprinted" style="">
+      <code class="code-content">
+        <span class="pln">$ bower install milligram</span>
+      </code>
+    </pre>
+</section>
+{% end %}
