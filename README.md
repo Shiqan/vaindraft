@@ -9,4 +9,4 @@ docker run --name=vaindraft -d -p 8888:8888 shiqan/vaindraft
 ```
 ## License
 
-Licensed under the [MIT License](vaindraft/LICENSE).
+Licensed under the [MIT License](LICENSE).
