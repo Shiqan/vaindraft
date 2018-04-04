@@ -5,37 +5,43 @@
     <section class="container">
         <div class="row">
           <div class="column">
-            <label for="teamBlue">Team Blue</label>
-            <input type="text" value="{{ team_blue }}" name="teamBlue">
+            <label for="teamBlue">Team Blue
+              <button class="button button-clear clipboard" data-clipboard-target="#foo">
+                Copy to clipboard
+              </button>
+            </label>
+            <input id="foo" type="text" value="{{ team_blue }}" name="teamBlue">
           </div>
 
           <div class="column">
-            <label for="teamRed">Team Red</label>
-            <input type="text" value="{{ team_red }}" name="teamRed">
+            <label for="teamRed">Team Red
+              <button class="button button-clear clipboard" data-clipboard-target="#bar">
+                Copy to clipboard
+              </button>
+            </label>
+            <input id="bar" type="text" value="{{ team_red }}" name="teamRed">
           </div>
         </div>
 
         <div class="column">
-          <label for="teamRed"> Spectators </label>
-          <input type="text" value="{{ spectators }}" name="teamRed">
+          <label for="teamRed"> Spectators
+            <button class="button button-clear clipboard" data-clipboard-target="#baz">
+              Copy to clipboard
+            </button>
+          </label>
+          <input id="baz" type="text" value="{{ spectators }}" name="spectators">
+        </div>
+
+        <div class="column" style="margin-top: 2.5rem;">
+          <p><button id="startDraft" class="button" title="Start Draft">Start Draft</button></p>
         </div>
     </section>
   </header>
+{% end %}
 
-  <section class="container" id="why">
-    <h3 class="title">Why it's awesome</h3>
-    <p>Milligram provides a minimal setup of styles for a fast and clean starting point. Just it! <strong>Only 2kb gzipped!</strong> It's not about a UI framework. Specially designed for better performance and higher productivity with fewer properties to reset resulting in cleaner code. Hope you enjoy!</p>
-  </section>
-
-  <section class="container" id="getting-started">
-    <h3 class="title">Getting Started</h3>
-    <p class="description">There are some ways to get started. First, see all download options available below, then choose the most suitable option for your need. Now you should add the main file of the Milligram and the CSS Reset in the header of your project. Just that!</p>
-    <p><a class="button download" href="https://github.com/milligram/milligram/archive/v1.3.0.zip" title="Download Milligram">Download Milligram</a></p>
-    <div class="example"><p><strong>Install with Bower</strong></p><p>Milligram is available to install using Bower.</p></div>
-    <pre class="code prettyprint prettyprinted" style="">
-      <code class="code-content">
-        <span class="pln">$ bower install milligram</span>
-      </code>
-    </pre>
-</section>
+{% block js %}
+<script>
+  const room = "{{ room }}";
+  const admin_url = "{{ admin }}"
+</script>
 {% end %}

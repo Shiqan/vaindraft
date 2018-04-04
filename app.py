@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Simple draft client with websocket for Vainglory."""
+"""Simple draft client with websockets for Vainglory, but more or less usable for whatever draft you want..."""
 
 import logging
 import tornado.escape
@@ -24,48 +24,6 @@ define("debug", default=False, help="enable or disable debug mode", type=bool)
 define("seconds_per_turn", default=30, help="seconds per turn", type=int)
 define("bonus_time", default=60, help="seconds of bonus time", type=int)
 
-# TODO make configurable
-heroes = [
-    'adagio',
-    'alpha',
-    'ardan',
-    'baptiste',
-    'baron',
-    'blackfeather',
-    'catherine',
-    'celeste',
-    'churnwalker',
-    'flicker',
-    'fortress',
-    'glaive',
-    'grace',
-    'grumpjaw',
-    'gwen',
-    'idris',
-    'joule',
-    'kestrel',
-    'koshka',
-    'krul',
-    'lance',
-    'lorelai',
-    'lyra',
-    'ozo',
-    'petal',
-    'phinn',
-    'reim',
-    'reza',
-    'ringo',
-    'rona',
-    'samuel',
-    'saw',
-    'skaarf',
-    'skye',
-    'taka',
-    'tony',
-    'varya',
-    'vox',
-]
-
 # TODO move to class
 key = Fernet.generate_key()
 f = Fernet(key)
@@ -74,13 +32,21 @@ f = Fernet(key)
 draft_states = {}
 
 # TODO consistency with role / side / team
-# TODO conistency with message / event / chat
+# TODO consistency with blue / red / 1 / 2
+# TODO consistency with message / event / chat
 class DraftState():
-    def __init__(self, style, team_blue, team_red):
+    def __init__(self, style, heroes, team_blue, team_red):
         self.style = style
+        self.heroes = heroes
         self.team_blue = team_blue
         self.team_red = team_red
         self.turn = 0
+        self.started = False
+        self.join_status = {
+            '0': False,
+            '1': False,
+            '2': False,
+        }
         self.history = []
         self.counters = {
             '1': {'counter': SecondCounter(), 'bonus': SecondCounter(value=options.bonus_time)},
@@ -92,6 +58,20 @@ class DraftState():
 
     def get_team_red(self):
         return self.team_red
+
+    def is_joined(self, team):
+        return self.join_status[team]
+
+    def has_joined(self, team):
+        self.join_status[team] = True
+        if team == '0' and self.is_ready():
+            self.started = True
+
+    def get_join_status(self):
+        return self.join_status
+
+    def get_heroes(self):
+        return self.heroes
 
     def get_style(self):
         # TODO Remove need of including index
@@ -116,7 +96,7 @@ class DraftState():
         if counter == 'counter':
             self.reset_counter(team)
         else:
-            self.reset_counter(team, v)
+            self.reset_bonus_counter(team, v)
         return v
 
     def get_time(self, team, counter='counter'):
@@ -142,6 +122,12 @@ class DraftState():
         if not self.is_ended():
             self.start_counter(self.get_current_team())
 
+    def is_ready(self):
+        return self.is_joined('1') and self.is_joined('2')
+
+    def is_started(self):
+        return self.started
+
     def is_turn(self, team):
         return self.get_current_team() == team
 
@@ -150,12 +136,12 @@ class DraftState():
 
 
 # TODO change chatsocket to draft socket...
-# TODO start draft button -> ajax call to get joined teams
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", MainHandler),
             (r"/draft/([a-zA-Z0-9-_=]*)$", DraftHandler),
+            (r"/draftstatus/([a-zA-Z0-9-_=]*)$", DraftStatusHandler),
             (r"/chatsocket/([a-zA-Z0-9-_=]*)$", ChatSocketHandler),
         ]
         settings = dict(
@@ -173,25 +159,31 @@ class MainHandler(tornado.web.RequestHandler):
     Main request handler for the root path and for chat rooms.
     """
     def get(self):
-        self.render("index.html", heroes=heroes)
+        self.render("index.html")
 
     def post(self):
         team_blue = self.get_argument('teamBlue')
         team_red = self.get_argument('teamRed')
         draft = self.get_argument('draftField')
+        heroesField = self.get_argument('heroesField')
 
         # TODO foolproofiy / validate beforehand
         style = json.loads(draft)
+        heroes = json.loads(heroesField)
         room = secrets.token_urlsafe(16)
 
-        string_spec = "{room}|{role}".format(room=room, role='0')
-        hash_spec = f.encrypt(str.encode(string_spec))
+        # TODO DRY it
+        string_admin = "{room}|{role}".format(room=room, role='0')
+        hash_admin = f.encrypt(str.encode(string_admin))
 
         string_blue = "{room}|{role}".format(room=room, role='1')
         hash_blue = f.encrypt(str.encode(string_blue))
 
         string_red = "{room}|{role}".format(room=room, role='2')
         hash_red = f.encrypt(str.encode(string_red))
+
+        string_spec = "{room}|{role}".format(room=room, role='spec')
+        hash_spec = f.encrypt(str.encode(string_spec))
 
         if options.debug:
             url = "localhost:"+ str(options.port) + "/draft/{}"
@@ -200,9 +192,25 @@ class MainHandler(tornado.web.RequestHandler):
 
 
         if room not in draft_states:
-            draft_states[room] = DraftState(style, team_blue, team_red)
+            draft_states[room] = DraftState(style, heroes, team_blue, team_red)
 
-        self.render('invite.html', spectators=url.format(hash_spec.decode()), team_blue=url.format(hash_blue.decode()), team_red=url.format(hash_red.decode()))
+        self.render('invite.html', room=room, admin=url.format(hash_admin.decode()), spectators=url.format(hash_spec.decode()), team_blue=url.format(hash_blue.decode()), team_red=url.format(hash_red.decode()))
+
+
+class DraftStatusHandler(tornado.web.RequestHandler):
+    def get(self, room=None):
+        if not room:
+            self.redirect('/')
+            return
+
+        if room not in draft_states:
+            self.redirect('/')
+            return
+
+        draft_state = draft_states[room]
+        response = draft_state.get_join_status()
+        response['ready'] = draft_state.is_ready()
+        self.write(response)
 
 
 class DraftHandler(tornado.web.RequestHandler):
@@ -215,14 +223,13 @@ class DraftHandler(tornado.web.RequestHandler):
         try:
             decrypted = f.decrypt(str.encode(hash)).decode()
         except (InvalidToken) as e:
+            logging.error(e)
             self.redirect('/')
             return
 
-        room, role = decrypted.split("|")
-
-        # TODO keep track who joined...
+        room, _ = decrypted.split("|")
         draft_state = draft_states[room]
-        self.render("draft.html", hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=heroes)
+        self.render("draft.html", hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes())
 
 
 # TODO timers
@@ -247,6 +254,7 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         try:
             decrypted = f.decrypt(str.encode(hash)).decode()
         except (InvalidToken) as e:
+            logging.error(e)
             self.redirect('/')
             self.close()
             return
@@ -267,6 +275,8 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         self.role = role
         draft_state = draft_states[room]
 
+        draft_state.has_joined(self.role)
+
         if room in ChatSocketHandler.waiters:
             if role in [client['role'] for client in ChatSocketHandler.waiters[room]]:
                 logging.info('Error: Role already specified')
@@ -278,6 +288,9 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
                 ChatSocketHandler.waiters[room].append({'waiter': self, 'role': self.role})
                 message = draft_state.get_history()
                 self.send_update(self, self.create_message("history", message))
+
+                if draft_state.is_started():
+                    self.send_updates(self.room, self.create_message("start", "Draft has started"))
         else:
             ChatSocketHandler.waiters[room] = [{'waiter': self, 'role': self.role}]
 
@@ -308,9 +321,18 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         logging.info('Received new message %r', message)
         # TODO validate message
 
+        # TODO fix this
+        if self.role != '1' and self.role != '2':
+            return
+
         draft_state = draft_states[self.room]
 
         logging.info(draft_state.stop_counter(self.role))
+
+        if not draft_state.is_started():
+            logging.info('Draft is not yet started')
+            self.send_update(self, self.create_message("message", "Draft is not yet started"))
+            return
 
         if not draft_state.is_turn(self.role):
             logging.info('Not your turn')

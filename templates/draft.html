@@ -6,20 +6,20 @@
       <div class="column column-25">
         <h1 class="title"> {{ team_blue }} </h1>
         {% for item in [i for i in draft_order if i['side'] == '1'] %}
-          {% include "draft_item.html" %}
+          {% include "components/draft_item.html" %}
         {% end %}
       </div>
 
       <div class="column column-50">
         {% for hero in heroes %}
-          {% include "hero.html" %}
+          {% include "components/hero.html" %}
         {% end %}
       </div>
 
       <div class="column column-25">
         <h1 class="title"> {{ team_red     }} </h1>
         {% for item in [i for i in draft_order if i['side'] == '2'] %}
-          {% include "draft_item.html" %}
+          {% include "components/draft_item.html" %}
         {% end %}
       </div>
     </div>
@@ -30,5 +30,4 @@
 <script>
   const hash = "{{ hash }}";
 </script>
-<script src="{{ static_url("chat.js") }}" type="text/javascript"></script>
 {% end %}
