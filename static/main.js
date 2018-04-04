@@ -2,6 +2,14 @@
 // Copyright 2018 Shiqan
 //
 $(document).ready(function() {
+    $("#startDraft").on('click', function() {
+        getDraftStatus();
+    });
+
+    $('#overrideHeroes').change(function() {
+      $("#overrideHeroesField").toggle();
+    });
+
     $(".hero-select").on("click", function() {
       if ($(this).hasClass("hero-highlight")) {
         newMessage($(this).data('hero'));
@@ -10,10 +18,30 @@ $(document).ready(function() {
       }
 
       return false;
-    })
+    });
 
-    updater.start();
+    if (typeof hash != 'undefined') {
+      updater.start();
+    }
+
+    new ClipboardJS('.clipboard');
 });
+
+function getDraftStatus() {
+    var url =  location.protocol + "//" + location.host + "/draftstatus/" + room;
+    axios.get(url)
+      .then(function (response) {
+        if (response.data.ready) {
+          window.location = location.protocol + "//" + admin_url;
+        } else {
+          toastr.options = {"positionClass": "toast-top-center"};
+          toastr.error('Not all the teams are joined yet!');
+        }
+      })
+      .catch(function (error) {
+        return error;
+      });
+}
 
 function newMessage(message) {
   updater.socket.send(message);
@@ -35,22 +63,23 @@ var updater = {
     },
 
     showMessage: function(message) {
-        if (message.type == "message") {
-            toastr.options = {"positionClass": "toast-top-center"};
-            toastr.error(message.message);
-            removeHeroHighlight();
+        if (message.type == "update") {
+          updateDraft(message.message, message.index);
         }
-
-        else if (message.type == "update") {
-            updateDraft(message.message, message.index);
+        else if (message.type == "message") {
+          toastr.options = {"positionClass": "toast-top-center"};
+          toastr.error(message.message);
+          removeHeroHighlight();
         }
-
+        else if (message.type == "start") {
+          toastr.options = {"positionClass": "toast-top-center"};
+          toastr.success(message.message);
+        }
         else if (message.type == "history") {
-            updateHistory(message.message);
+          updateHistory(message.message);
         }
     }
 };
-
 
 function lockHero(hero) {
   $(hero).removeClass("hero-select hero-highlight").addClass("hero-locked").off("click");

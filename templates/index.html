@@ -16,7 +16,7 @@
           </fieldset>
         </div>
 
-        <fieldset>
+        <fieldset class="column">
           <label for="draftField">Construct your Draft</label>
           <textarea name="draftField" rows="5">[
                           {"index": 1, "side": "1", "type": "ban"},
@@ -26,27 +26,98 @@
                           {"index": 5, "side": "1", "type": "pick"},
                           {"index": 6, "side": "2", "type": "pick"}
                       ]</textarea>
-          <input class="button button-outline" type="submit" value="Get Started">
         </fieldset>
+
+        <fieldset>
+          <input id="overrideHeroes" type="checkbox" name="overrideHeroes"><label for="overrideHeroes">Override Heroes?</label><br>
+        </fieldset>
+
+        <fieldset class="column" id="overrideHeroesField" style="display: none;">
+          <label for="heroesField">Override the heroes</label>
+          <textarea name="heroesField" rows="5"> [
+            {"name": "adagio"},
+            {"name": "alpha"},
+            {"name": "ardan"},
+            {"name": "baptiste"},
+            {"name": "baron"},
+            {"name": "blackfeather"},
+            {"name": "catherine"},
+            {"name": "celeste"},
+            {"name": "churnwalker"},
+            {"name": "flicker"},
+            {"name": "fortress"},
+            {"name": "glaive"},
+            {"name": "grace"},
+            {"name": "grumpjaw"},
+            {"name": "gwen"},
+            {"name": "idris"},
+            {"name": "joule"},
+            {"name": "kestrel"},
+            {"name": "koshka"},
+            {"name": "krul"},
+            {"name": "lance"},
+            {"name": "lorelai"},
+            {"name": "lyra"},
+            {"name": "ozo"},
+            {"name": "petal"},
+            {"name": "phinn"},
+            {"name": "reim"},
+            {"name": "reza"},
+            {"name": "ringo"},
+            {"name": "rona"},
+            {"name": "samuel"},
+            {"name": "saw"},
+            {"name": "skaarf"},
+            {"name": "skye"},
+            {"name": "taka"},
+            {"name": "tony"},
+            {"name":  "varya"},
+            {"name": "vox"}
+        ]</textarea>
+        </fieldset>
+
+        <div class="column">
+          <input class="button button-outline" type="submit" value="Get Started">
+        </div>
 
         {% module xsrf_form_html() %}
       </form>
     </section>
   </header>
 
-  <section class="container" id="why">
-    <h3 class="title">Why it's awesome</h3>
-    <p>Milligram provides a minimal setup of styles for a fast and clean starting point. Just it! <strong>Only 2kb gzipped!</strong> It's not about a UI framework. Specially designed for better performance and higher productivity with fewer properties to reset resulting in cleaner code. Hope you enjoy!</p>
-  </section>
-
   <section class="container" id="getting-started">
-    <h3 class="title">Getting Started</h3>
-    <p class="description">There are some ways to get started. First, see all download options available below, then choose the most suitable option for your need. Now you should add the main file of the Milligram and the CSS Reset in the header of your project. Just that!</p>
-    <p><a class="button download" href="https://github.com/milligram/milligram/archive/v1.3.0.zip" title="Download Milligram">Download Milligram</a></p>
-    <div class="example"><p><strong>Install with Bower</strong></p><p>Milligram is available to install using Bower.</p></div>
-    <pre class="code prettyprint prettyprinted" style="">
+    <h3 class="title">Customize the draft</h3>
+    <p class="description">There are some ways to get started. First, provide the teamnames. Then construct your preferred draft order. Now you should be good to go! Optionally, you can override the draft to include (or exclude) heroes and their images.</p>
+
+    <div class="example">
+      <p><strong>Construct the draft order</strong></p>
+      <p> The draft order is constructed with JSON objects as shown below. The index indicates the draft position the side indicates which team and the type indicates a ban or a pick action.</p>
+    </div>
+
+    <pre class="code prettyprint prettyprinted">
       <code class="code-content">
-        <span class="pln">$ bower install milligram</span>
+        <span class="pln"> {"index": 1, "side": "1", "type": "ban"}, </span>
+      </code>
+    </pre>
+
+    <div class="example">
+      <p><strong>Override the heroes</strong></p>
+      <p> To include a hero in the draft, just add a JSON object to the list with the hero's name.</p>
+    </div>
+
+    <pre class="code prettyprint prettyprinted">
+      <code class="code-content">
+        <span class="pln"> {"name": "adagio"} </span>
+      </code>
+    </pre>
+
+    <div class="example">
+      <p> If you want to override the default image, provide an img source. </p>
+    </div>
+
+    <pre class="code prettyprint prettyprinted">
+      <code class="code-content">
+        <span class="pln"> {"name": "adagio", "img": "https://...adagio.png"} </span>
       </code>
     </pre>
 </section>
