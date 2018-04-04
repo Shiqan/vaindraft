@@ -32,7 +32,7 @@ function getDraftStatus() {
     axios.get(url)
       .then(function (response) {
         if (response.data.ready) {
-          window.location = location.protocol + "//" + admin_url;
+          window.location = admin_url;
         } else {
           toastr.options = {"positionClass": "toast-top-center"};
           toastr.error('Not all the teams are joined yet!');
