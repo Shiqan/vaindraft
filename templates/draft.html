@@ -4,6 +4,17 @@
 <section class="draft">
     <div class="row">
       <div class="column column-25">
+        <h1 id="bonustimer-1" class="title"> {{ bonus_time }} </h1>
+      </div>
+      <div class="column column-50">
+        <h1 id="timer" class="title"> {{ seconds_per_turn }} </h1>
+      </div>
+      <div class="column column-25">
+        <h1 id="bonustimer-2" class="title"> {{ bonus_time }} </h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="column column-25">
         <h1 class="title"> {{ team_blue }} </h1>
         {% for item in [i for i in draft_order if i['side'] == '1'] %}
           {% include "components/draft_item.html" %}

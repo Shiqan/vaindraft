@@ -21,19 +21,38 @@
           <textarea name="draftField" rows="5">[
                           {"index": 1, "side": "1", "type": "ban"},
                           {"index": 2, "side": "2", "type": "ban"},
-                          {"index": 3, "side": "2", "type": "ban"},
-                          {"index": 4, "side": "1", "type": "ban"},
+                          {"index": 3, "side": "1", "type": "ban"},
+                          {"index": 4, "side": "2", "type": "ban"},
                           {"index": 5, "side": "1", "type": "pick"},
-                          {"index": 6, "side": "2", "type": "pick"}
+                          {"index": 6, "side": "2", "type": "pick"},
+                          {"index": 7, "side": "2", "type": "pick"},
+                          {"index": 8, "side": "1", "type": "pick"},
+                          {"index": 9, "side": "1", "type": "pick"},
+                          {"index": 10, "side": "2", "type": "pick"},
+                          {"index": 11, "side": "2", "type": "pick"},
+                          {"index": 12, "side": "1", "type": "pick"},
+                          {"index": 13, "side": "1", "type": "pick"},
+                          {"index": 14, "side": "2", "type": "pick"}
                       ]</textarea>
         </fieldset>
 
-        <fieldset>
+        <div class="row">
+          <fieldset class="column">
+            <label for="secondsPerTurn"> Seconds per turn </label>
+            <input type="text" value="30" name="secondsPerTurn">
+          </fieldset>
+
+          <fieldset class="column">
+            <label for="bonusTime"> Bonus time </label>
+            <input type="text" value="60" name="bonusTime">
+          </fieldset>
+        </div>
+
+        <fieldset class="column">
           <input id="overrideHeroes" type="checkbox" name="overrideHeroes"><label for="overrideHeroes">Override Heroes?</label><br>
         </fieldset>
 
         <fieldset class="column" id="overrideHeroesField" style="display: none;">
-          <label for="heroesField">Override the heroes</label>
           <textarea name="heroesField" rows="5"> [
             {"name": "adagio"},
             {"name": "alpha"},
@@ -87,7 +106,7 @@
 
   <section class="container" id="getting-started">
     <h3 class="title">Customize the draft</h3>
-    <p class="description">There are some ways to get started. First, provide the teamnames. Then construct your preferred draft order. Now you should be good to go! Optionally, you can override the draft to include (or exclude) heroes and their images.</p>
+    <p class="description">Here are some steps to get started. First, provide the teamnames. Then construct your preferred draft order. Now you should be good to go! Optionally, you can override the draft to include (or exclude) heroes and their images.</p>
 
     <div class="example">
       <p><strong>Construct the draft order</strong></p>

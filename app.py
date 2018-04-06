@@ -21,8 +21,6 @@ from datetime import datetime
 
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=False, help="enable or disable debug mode", type=bool)
-define("seconds_per_turn", default=30, help="seconds per turn", type=int)
-define("bonus_time", default=60, help="seconds of bonus time", type=int)
 
 # TODO move to class
 key = Fernet.generate_key()
@@ -34,13 +32,22 @@ draft_states = {}
 # TODO consistency with role / side / team
 # TODO consistency with blue / red / 1 / 2
 # TODO consistency with message / event / chat
+# TODO move options / teams to seperate classes
+# TODO timers optional
 class DraftState():
-    def __init__(self, style, heroes, team_blue, team_red):
+    def __init__(self, room, style, heroes, team_blue, team_red, seconds_per_turn, bonus_time):
+        self.room = room
         self.style = style
         self.heroes = heroes
         self.team_blue = team_blue
         self.team_red = team_red
         self.turn = 0
+        self.seconds_per_turn = seconds_per_turn
+        self.initial_bonus_time = bonus_time
+        self.bonus_time = {
+            '1': bonus_time,
+            '2': bonus_time,
+        }
         self.started = False
         self.join_status = {
             '0': False,
@@ -48,10 +55,7 @@ class DraftState():
             '2': False,
         }
         self.history = []
-        self.counters = {
-            '1': {'counter': SecondCounter(), 'bonus': SecondCounter(value=options.bonus_time)},
-            '2': {'counter': SecondCounter(), 'bonus': SecondCounter(value=options.bonus_time)}
-        }
+        self.counter = SecondCounter(self.room, self.seconds_per_turn, self.bonus_time[self.get_current_team()], self.get_current_team())
 
     def get_team_blue(self):
         return self.team_blue
@@ -86,32 +90,17 @@ class DraftState():
     def get_current_team(self):
         return self.style[self.turn]['side']
 
-    def start_counter(self, team, counter='counter'):
-        logging.info("STARTING COUNTER FOR TEAM %s", team)
-        self.counters[team][counter].start()
+    def start_counter(self):
+        tornado.ioloop.IOLoop.current().spawn_callback(lambda: self.counter.loop())
 
-    def stop_counter(self, team, counter='counter'):
-        logging.info("STOPPING COUNTER FOR TEAM %s", team)
-        v = self.counters[team][counter].finish()
-        if counter == 'counter':
-            self.reset_counter(team)
-        else:
-            self.reset_bonus_counter(team, v)
+    def stop_counter(self):
+        v = self.counter.finish()
+        if v['type'] == 'bonus':
+            self.bonus_time[v['team']] = v['value']
         return v
 
-    def get_time(self, team, counter='counter'):
-        return self.counters[team][counter].peek()
-
-    def has_time_left(self, team, counter='counter'):
-        return self.get_time(team, counter) > 0
-
-    def reset_counter(self, team):
-        logging.info("RESETTING COUNTER FOR TEAM %s", team)
-        self.counters[team]['counter'] = SecondCounter()
-
-    def reset_bonus_counter(self, team, value):
-        logging.info("RESETTING COUNTER FOR TEAM %s", team)
-        self.counters[team]['bonus'] = SecondCounter(value=value)
+    def reset_counter(self):
+        self.counter = SecondCounter(self.room, self.seconds_per_turn, self.bonus_time[self.get_current_team()], self.get_current_team())
 
     def next_turn(self):
         self.turn += 1
@@ -119,8 +108,10 @@ class DraftState():
     def update_draft(self, event):
         self.history.append(event)
         self.next_turn()
+
         if not self.is_ended():
-            self.start_counter(self.get_current_team())
+            self.reset_counter()
+            self.start_counter()
 
     def is_ready(self):
         return self.is_joined('1') and self.is_joined('2')
@@ -145,7 +136,6 @@ class Application(tornado.web.Application):
             (r"/chatsocket/([a-zA-Z0-9-_=]*)$", ChatSocketHandler),
         ]
         settings = dict(
-            cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
@@ -156,7 +146,7 @@ class Application(tornado.web.Application):
 
 class MainHandler(tornado.web.RequestHandler):
     """
-    Main request handler for the root path and for chat rooms.
+    Main request handler for the root path and for draft creation post request.
     """
     def get(self):
         self.render("index.html")
@@ -164,6 +154,8 @@ class MainHandler(tornado.web.RequestHandler):
     def post(self):
         team_blue = self.get_argument('teamBlue')
         team_red = self.get_argument('teamRed')
+        seconds_per_turn = self.get_argument('secondsPerTurn')
+        bonus_time = self.get_argument('bonusTime')
         draft = self.get_argument('draftField')
         heroesField = self.get_argument('heroesField')
 
@@ -186,18 +178,21 @@ class MainHandler(tornado.web.RequestHandler):
         hash_spec = f.encrypt(str.encode(string_spec))
 
         if options.debug:
-            url = "localhost:"+ str(options.port) + "/draft/{}"
+            url = "http://localhost:"+ str(options.port) + "/draft/{}"
         else:
             url = "https://vaindraft.herokuapp.com/draft/{}"
 
 
         if room not in draft_states:
-            draft_states[room] = DraftState(style, heroes, team_blue, team_red)
+            draft_states[room] = DraftState(room, style, heroes, team_blue, team_red, int(seconds_per_turn), int(bonus_time))
 
         self.render('invite.html', room=room, admin=url.format(hash_admin.decode()), spectators=url.format(hash_spec.decode()), team_blue=url.format(hash_blue.decode()), team_red=url.format(hash_red.decode()))
 
 
 class DraftStatusHandler(tornado.web.RequestHandler):
+    """
+    Endpoint to request status of a draft.
+    """
     def get(self, room=None):
         if not room:
             self.redirect('/')
@@ -214,6 +209,9 @@ class DraftStatusHandler(tornado.web.RequestHandler):
 
 
 class DraftHandler(tornado.web.RequestHandler):
+    """
+    Handler to generate the draft page.
+    """
     def get(self, hash=None):
         if not hash:
             self.redirect('/')
@@ -229,7 +227,7 @@ class DraftHandler(tornado.web.RequestHandler):
 
         room, _ = decrypted.split("|")
         draft_state = draft_states[room]
-        self.render("draft.html", hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes())
+        self.render("draft.html", hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes(), seconds_per_turn = draft_state.seconds_per_turn, bonus_time = draft_state.initial_bonus_time)
 
 
 # TODO timers
@@ -278,9 +276,9 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         draft_state.has_joined(self.role)
 
         if room in ChatSocketHandler.waiters:
-            if role in [client['role'] for client in ChatSocketHandler.waiters[room]]:
+            # TODO fix for multiple spectators
+            if (role == '1' or role == '2') and role in [client['role'] for client in ChatSocketHandler.waiters[room]]:
                 logging.info('Error: Role already specified')
-                # TODO specify which roles are limited
                 self.send_update(self, self.create_message("error", "Role already specified"))
                 self.room = None
                 self.close()
@@ -291,6 +289,7 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
                 if draft_state.is_started():
                     self.send_updates(self.room, self.create_message("start", "Draft has started"))
+                    draft_state.start_counter()
         else:
             ChatSocketHandler.waiters[room] = [{'waiter': self, 'role': self.role}]
 
@@ -327,7 +326,7 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
         draft_state = draft_states[self.room]
 
-        logging.info(draft_state.stop_counter(self.role))
+        logging.info(draft_state.stop_counter())
 
         if not draft_state.is_started():
             logging.info('Draft is not yet started')
@@ -377,32 +376,40 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         return event
 
 
-# TODO implement with observer pattern?
-class SecondCounter(threading.Thread):
-    '''
-    Create a thread object that will do the counting in the background
-    '''
-    def __init__(self, interval=1, value=options.seconds_per_turn):
-        threading.Thread.__init__(self)
-        self.interval = interval  # seconds
-        self.value = value
-        self.alive = False
-
-    def run(self):
+class SecondCounter():
+    """
+    Background thread for counter (called with ioloop.spawn_callback).
+    """
+    def __init__(self, room, value, bonus, team):
         self.alive = True
-        while self.alive:
-            if self.value > 0:
-                time.sleep(self.interval)
-                self.value -= self.interval
-            else:
-                self.finish()
+        self.room = room
+        self.value = value
+        self.bonus = bonus
+        self.team = team
 
-    def peek(self):
-        return self.value
+    @gen.coroutine
+    def loop(self):
+        while self.alive and self.value > 0:
+            nxt = gen.sleep(1)
+            self.value -= 1
+            yield ChatSocketHandler.send_updates(self.room, {'type': 'time', 'message': self.value})
+            yield nxt
+
+        while self.alive and self.bonus > 0:
+            nxt = gen.sleep(1)
+            self.bonus -= 1
+            yield ChatSocketHandler.send_updates(self.room, {'type': 'bonustime', 'message': self.bonus, 'team': self.team})
+            yield nxt
+
+        if self.alive:
+            ChatSocketHandler.send_updates(self.room, {'type': 'message', 'message': "Time is up!"})
 
     def finish(self):
         self.alive = False
-        return self.value
+        if self.value > 0:
+            return {'type': 'time', 'value': self.value, 'team': self.team}
+        else:
+            return {'type': 'bonus', 'value': self.bonus, 'team': self.team}
 
 
 def main():

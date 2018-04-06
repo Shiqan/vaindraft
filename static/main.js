@@ -66,6 +66,12 @@ var updater = {
         if (message.type == "update") {
           updateDraft(message.message, message.index);
         }
+        else if (message.type == "time") {
+          $("#timer").text(message.message);
+        }
+        else if (message.type == "bonustime") {
+          $("#bonustimer-"+message.team).text(message.message);
+        }
         else if (message.type == "message") {
           toastr.options = {"positionClass": "toast-top-center"};
           toastr.error(message.message);
