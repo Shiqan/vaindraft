@@ -2,6 +2,6 @@
   "name": "Vaindraft",
   "description": "A vainglroy draft simulator with Tornado and Websockets",
   "repository": "https://github.com/Shiqan/vaindraft",
-  "logo": "",
+  "logo": "http://via.placeholder.com/350x150",
   "keywords": ["python", "vainglory", "tornado", "websockets"]
 }
