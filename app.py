@@ -21,6 +21,7 @@ from datetime import datetime
 
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=False, help="enable or disable debug mode", type=bool)
+define("cookie_key", default=secrets.token_urlsafe(32), help="cookie secret key", type=str)
 
 # TODO move to class
 key = Fernet.generate_key()
@@ -131,6 +132,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", MainHandler),
+            (r"/theme", CookieHandler),
             (r"/draft/([a-zA-Z0-9-_=]*)$", DraftHandler),
             (r"/draftstatus/([a-zA-Z0-9-_=]*)$", DraftStatusHandler),
             (r"/chatsocket/([a-zA-Z0-9-_=]*)$", ChatSocketHandler),
@@ -138,18 +140,25 @@ class Application(tornado.web.Application):
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
+            cookie_secret=options.cookie_key,
             xsrf_cookies=True,
             debug=options.debug,
         )
         super(Application, self).__init__(handlers, **settings)
 
+class CustomHandler(tornado.web.RequestHandler):
+    def get_theme(self):
+        if not self.get_secure_cookie("theme_cookie"):
+            return False
+        else:
+            return True if self.get_secure_cookie("theme_cookie").decode() == "dark" else False
 
-class MainHandler(tornado.web.RequestHandler):
+class MainHandler(CustomHandler):
     """
     Main request handler for the root path and for draft creation post request.
     """
     def get(self):
-        self.render("index.html")
+        self.render("index.html", dark=self.get_theme())
 
     def post(self):
         team_blue = self.get_argument('teamBlue')
@@ -182,11 +191,31 @@ class MainHandler(tornado.web.RequestHandler):
         else:
             url = "https://vaindraft.herokuapp.com/draft/{}"
 
-
         if room not in draft_states:
             draft_states[room] = DraftState(room, style, heroes, team_blue, team_red, int(seconds_per_turn), int(bonus_time))
 
-        self.render('invite.html', room=room, admin=url.format(hash_admin.decode()), spectators=url.format(hash_spec.decode()), team_blue=url.format(hash_blue.decode()), team_red=url.format(hash_red.decode()))
+        self.render('invite.html', dark=self.get_theme(), room=room, admin=url.format(hash_admin.decode()), spectators=url.format(hash_spec.decode()), team_blue=url.format(hash_blue.decode()), team_red=url.format(hash_red.decode()))
+
+
+class CookieHandler(tornado.web.RequestHandler):
+    """
+    Endpoint to change the theme color.
+    """
+    def get(self):
+        theme = self.read()
+        if theme == "dark":
+            self.set("light")
+        else:
+            self.set("dark")
+
+    def read(self):
+        if self.get_secure_cookie("theme_cookie"):
+            return self.get_secure_cookie("theme_cookie").decode()
+
+
+    def set(self, theme):
+        logging.info('Set theme cookie to %s', theme)
+        self.set_secure_cookie("theme_cookie", theme, path="/")
 
 
 class DraftStatusHandler(tornado.web.RequestHandler):
@@ -208,7 +237,7 @@ class DraftStatusHandler(tornado.web.RequestHandler):
         self.write(response)
 
 
-class DraftHandler(tornado.web.RequestHandler):
+class DraftHandler(CustomHandler):
     """
     Handler to generate the draft page.
     """
@@ -227,11 +256,9 @@ class DraftHandler(tornado.web.RequestHandler):
 
         room, _ = decrypted.split("|")
         draft_state = draft_states[room]
-        self.render("draft.html", hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes(), seconds_per_turn = draft_state.seconds_per_turn, bonus_time = draft_state.initial_bonus_time)
+        self.render("draft.html", dark=self.get_theme(), hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes(), seconds_per_turn = draft_state.seconds_per_turn, bonus_time = draft_state.initial_bonus_time)
 
 
-# TODO timers
-# TODO start button
 class ChatSocketHandler(tornado.websocket.WebSocketHandler):
     """
     Handler for dealing with websockets. It receives, stores and distributes new messages.
