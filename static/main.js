@@ -2,6 +2,10 @@
 // Copyright 2018 Shiqan
 //
 $(document).ready(function() {
+    $("#switchTheme").on('click', function() {
+        switchTheme();
+    });
+
     $("#startDraft").on('click', function() {
         getDraftStatus();
     });
@@ -26,6 +30,17 @@ $(document).ready(function() {
 
     new ClipboardJS('.clipboard');
 });
+
+function switchTheme() {
+  var url =  location.protocol + "//" + location.host + "/theme";
+  axios.get(url)
+    .then(function (response) {
+      location.reload();
+    })
+    .catch(function (error) {
+      return error;
+    });
+}
 
 function getDraftStatus() {
     var url =  location.protocol + "//" + location.host + "/draftstatus/" + room;
