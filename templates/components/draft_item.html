@@ -1,4 +1,3 @@
-<div class="draft-item {% if item['side'] == '1' %} draft-team-left {% else %} draft-team-right {% end %} {{ item['type'] }}">
-  <div class="timer {% if item['side'] == '1' %} id-timer-left {% else %} id-timer-right {% end %}"> </div>
+<div class="draft-item {% if item['side'] == '1' %} draft-team-left {% else %} draft-team-right {% end %} {{ item['type'] }}" data-order="{{ item['index'] }}">
   <img class="img-fluid" data-order="{{ item['index'] }}" data-side="{{ item['side'] }}" data-type="{{ item['type'] }}" data-time-left="30" src="/static/images/placeholder.png" alt="{{ item['type'] }}">
 </div>
