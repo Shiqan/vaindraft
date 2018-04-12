@@ -180,7 +180,7 @@ class MainHandler(tornado.web.RequestHandler):
         if options.debug:
             url = "http://localhost:"+ str(options.port) + "/draft/{}"
         else:
-            url = "https://draftsim.herokuapp.com/draft/{}"
+            url = "https://draft-sim.herokuapp.com/draft/{}"
 
 
         if room not in draft_states:
