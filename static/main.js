@@ -2,6 +2,10 @@
 // Copyright 2018 Shiqan
 //
 $(document).ready(function() {
+    $("#switchTheme").on('click', function() {
+        switchTheme();
+    });
+
     $("#startDraft").on('click', function() {
         getDraftStatus();
     });
@@ -26,6 +30,17 @@ $(document).ready(function() {
 
     new ClipboardJS('.clipboard');
 });
+
+function switchTheme() {
+  var url =  location.protocol + "//" + location.host + "/theme";
+  axios.get(url)
+    .then(function (response) {
+      location.reload();
+    })
+    .catch(function (error) {
+      return error;
+    });
+}
 
 function getDraftStatus() {
     var url =  location.protocol + "//" + location.host + "/draftstatus/" + room;
@@ -65,6 +80,7 @@ var updater = {
     showMessage: function(message) {
         if (message.type == "update") {
           updateDraft(message.message, message.index);
+          updateTurnIndicator(message.index);
         }
         else if (message.type == "time") {
           $("#timer").text(message.message);
@@ -80,12 +96,21 @@ var updater = {
         else if (message.type == "start") {
           toastr.options = {"positionClass": "toast-top-center"};
           toastr.success(message.message);
+          turnIndicator(1);
         }
         else if (message.type == "history") {
           updateHistory(message.message);
         }
     }
 };
+
+function removeTurnIndicator() {
+  $(".draft-item").removeClass('turn-indicator');
+}
+
+function turnIndicator(index) {
+  $(".draft-item[data-order='"+index+"']").addClass('turn-indicator');
+}
 
 function lockHero(hero) {
   $(hero).removeClass("hero-select hero-highlight").addClass("hero-locked").off("click");
@@ -101,6 +126,11 @@ function updateDraft(hero, index) {
 
     $(draft_item).attr('src', '/static/images/heroes/'+hero+'.png');
     lockHero(hero_select);
+}
+
+function updateTurnIndicator(index) {
+  removeTurnIndicator();
+  turnIndicator(index+1);
 }
 
 function updateHistory(draftHistory) {
