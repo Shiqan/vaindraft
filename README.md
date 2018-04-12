@@ -1,16 +1,5 @@
 # Vainglory draft simulator with WebSocket
 
-This is a websocket based draft simulator written in python.
+This is a websocket based draft simulator written in python. Originally written by Shiqan (https://github.com/Shiqan/vaindraft). Edited by physiX for 5v5 competitive drafting
 
-
-```
-docker build -t shiqan/vaindraft .
-docker run --name=vaindraft -d -p 8888:8888 shiqan/vaindraft
-```
-
-## Heroku 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-## License
-
-Licensed under the [MIT License](LICENSE).
+To enter the draft, go to https://draft-sim.herokuapp.com/
