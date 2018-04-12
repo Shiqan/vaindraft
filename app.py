@@ -186,10 +186,7 @@ class MainHandler(CustomHandler):
         string_spec = "{room}|{role}".format(room=room, role='spec')
         hash_spec = f.encrypt(str.encode(string_spec))
 
-        if options.debug:
-            url = "http://localhost:"+ str(options.port) + "/draft/{}"
-        else:
-            url = "https://vaindraft.herokuapp.com/draft/{}"
+        url = self.request.protocol + "://" + self.request.host + "/draft/{}"
 
         if room not in draft_states:
             draft_states[room] = DraftState(room, style, heroes, team_blue, team_red, int(seconds_per_turn), int(bonus_time))
