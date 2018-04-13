@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.6"
+
+# Using the Firefox addon in headless mode
+env:
+  - MOZ_HEADLESS=1
+addons:
+  firefox: latest
+
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+# command to run tests
+script:
+  - nosetests tests
