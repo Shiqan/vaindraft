@@ -20,7 +20,6 @@ $(document).ready(function() {
       } else {
         $(this).addClass("hero-highlight");
       }
-
       return false;
     });
 
@@ -123,8 +122,9 @@ function removeHeroHighlight() {
 function updateDraft(hero, index) {
     var draft_item = $(".draft-item > img[data-order='"+index+"']");
     var hero_select = $(".hero-select[data-hero='"+hero+"']");
+    var hero_img = hero_select.attr('src');
 
-    $(draft_item).attr('src', '/static/images/heroes/'+hero+'.png');
+    $(draft_item).attr('src', hero_img);
     lockHero(hero_select);
 }
 
