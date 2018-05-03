@@ -52,7 +52,6 @@ $team-right: #ff5945;
   box-sizing: border-box;
 }
 
-
 //
 // Extend Milligram
 //
@@ -139,6 +138,22 @@ $team-right: #ff5945;
    top:0;
    width:100%;
    z-index:1;
+
+   &.team-right {
+     background: $team-right;
+
+     .octocat {
+       fill: $team-right;
+     }
+
+   }
+   &.team-left {
+     background: $team-left;
+
+     .octocat {
+       fill: $team-left;
+     }
+   }
 }
 .navigation .container{
    padding-bottom:0;
