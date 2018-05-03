@@ -1,6 +1,13 @@
 {% extends "_layout.html" %}
 
 {% block content %}
+{% if role == '1' %}
+  <section class="draft-background-left"></section>
+{% elif role == '2' %}
+  <section class="draft-background-right"></section>
+{% elif role == '2' %}
+  <section class="draft-background-spec"></section>
+{% end %}
 <section class="draft">
     <div class="row">
       <div class="column column-25">

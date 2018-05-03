@@ -474,6 +474,8 @@ textarea {
   }
 
   .hero-select {
+    position: relative;
+        
     &.hero-highlight, &:hover{
       opacity: .75;
       transition: all 0.3s ease;
