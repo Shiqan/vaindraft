@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 """Simple draft client with websockets for Vainglory, but more or less usable for whatever draft you want..."""
 
+import json
 import logging
+import os.path
+import secrets
+import threading
+import time
+from datetime import datetime
+
 import tornado.escape
 import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
-import os.path
-import json
-import secrets
-import threading
-import time
-
-from cryptography.fernet import Fernet
-from cryptography.fernet import InvalidToken
-from tornado.options import define, options
+from cryptography.fernet import Fernet, InvalidToken
 from tornado import gen
-from datetime import datetime
+from tornado.options import define, options
 
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=False, help="enable or disable debug mode", type=bool)
@@ -251,9 +250,9 @@ class DraftHandler(CustomHandler):
             self.redirect('/')
             return
 
-        room, _ = decrypted.split("|")
+        room, role = decrypted.split("|")
         draft_state = draft_states[room]
-        self.render("draft.html", dark=self.get_theme(), hash=hash, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes(), seconds_per_turn = draft_state.seconds_per_turn, bonus_time = draft_state.initial_bonus_time)
+        self.render("draft.html", dark=self.get_theme(), hash=hash, role=role, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes(), seconds_per_turn = draft_state.seconds_per_turn, bonus_time = draft_state.initial_bonus_time)
 
 
 class ChatSocketHandler(tornado.websocket.WebSocketHandler):
