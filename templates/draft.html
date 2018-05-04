@@ -1,6 +1,9 @@
 {% extends "_layout.html" %}
 
 {% block content %}
+{% if background == 'on' %}
+  <section class="draft-background-spec" style="background-image: url('{{background_url}}');"></section>
+{% end %}
 <section class="draft">
     <div class="row">
       <div class="column column-25">
