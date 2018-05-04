@@ -142,6 +142,10 @@ $team-right: #ff5945;
    &.team-right {
      background: $team-right;
 
+     .title {
+       color: #fff;
+     }
+
      .octocat {
        fill: $team-right;
      }
@@ -149,6 +153,10 @@ $team-right: #ff5945;
    }
    &.team-left {
      background: $team-left;
+
+     .title {
+       color: #fff;
+     }
 
      .octocat {
        fill: $team-left;
@@ -475,7 +483,7 @@ textarea {
 
   .hero-select {
     position: relative;
-        
+
     &.hero-highlight, &:hover{
       opacity: .75;
       transition: all 0.3s ease;

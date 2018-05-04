@@ -1,12 +1,8 @@
 {% extends "_layout.html" %}
 
 {% block content %}
-{% if role == '1' %}
-  <section class="draft-background-left"></section>
-{% elif role == '2' %}
-  <section class="draft-background-right"></section>
-{% elif role == '2' %}
-  <section class="draft-background-spec"></section>
+{% if background == 'on' %}
+  <section class="draft-background-spec" style="background-image: url('{{background_url}}');"></section>
 {% end %}
 <section class="draft">
     <div class="row">

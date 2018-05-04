@@ -13,6 +13,10 @@ $(document).ready(function() {
     $('#overrideHeroes').change(function() {
       $("#overrideHeroesField").toggle();
     });
+    
+    $('#customBackground').change(function() {
+      $("#customBackgroundField").toggle();
+    });
 
     $(".hero-select").on("click", function() {
       if ($(this).hasClass("hero-highlight")) {

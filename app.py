@@ -35,7 +35,7 @@ draft_states = {}
 # TODO move options / teams to seperate classes
 # TODO timers optional
 class DraftState():
-    def __init__(self, room, style, heroes, team_blue, team_red, seconds_per_turn, bonus_time):
+    def __init__(self, room, style, heroes, team_blue, team_red, seconds_per_turn, bonus_time, background, background_url):
         self.room = room
         self.style = style
         self.heroes = heroes
@@ -56,6 +56,8 @@ class DraftState():
         }
         self.history = []
         self.counter = SecondCounter(self.room, self.seconds_per_turn, self.bonus_time[self.get_current_team()], self.get_current_team())
+        self.background = background
+        self.background_url = background_url
 
     def get_team_blue(self):
         return self.team_blue
@@ -160,12 +162,18 @@ class MainHandler(CustomHandler):
         self.render("index.html", dark=self.get_theme())
 
     def post(self):
+        # TODO provide defaults
         team_blue = self.get_argument('teamBlue')
         team_red = self.get_argument('teamRed')
         seconds_per_turn = self.get_argument('secondsPerTurn')
         bonus_time = self.get_argument('bonusTime')
         draft = self.get_argument('draftField')
         heroesField = self.get_argument('heroesField')
+        background = self.get_argument('customBackground', 'off')
+        background_url = self.get_argument('customBackgroundField')
+
+        logging.info(background)
+        logging.info(background_url)
 
         # TODO foolproofiy / validate beforehand
         style = json.loads(draft)
@@ -188,7 +196,7 @@ class MainHandler(CustomHandler):
         url = self.request.protocol + "://" + self.request.host + "/draft/{}"
 
         if room not in draft_states:
-            draft_states[room] = DraftState(room, style, heroes, team_blue, team_red, int(seconds_per_turn), int(bonus_time))
+            draft_states[room] = DraftState(room, style, heroes, team_blue, team_red, int(seconds_per_turn), int(bonus_time), background, background_url)
 
         self.render('invite.html', dark=self.get_theme(), room=room, admin=url.format(hash_admin.decode()), spectators=url.format(hash_spec.decode()), team_blue=url.format(hash_blue.decode()), team_red=url.format(hash_red.decode()))
 
@@ -252,7 +260,16 @@ class DraftHandler(CustomHandler):
 
         room, role = decrypted.split("|")
         draft_state = draft_states[room]
-        self.render("draft.html", dark=self.get_theme(), hash=hash, role=role, team_blue=draft_state.get_team_blue(), team_red=draft_state.get_team_red(), draft_order=draft_state.get_style(), heroes=draft_state.get_heroes(), seconds_per_turn = draft_state.seconds_per_turn, bonus_time = draft_state.initial_bonus_time)
+        self.render("draft.html", dark=self.get_theme(), hash=hash, role=role, 
+            team_blue=draft_state.get_team_blue(), 
+            team_red=draft_state.get_team_red(), 
+            draft_order=draft_state.get_style(), 
+            heroes=draft_state.get_heroes(), 
+            seconds_per_turn = draft_state.seconds_per_turn, 
+            bonus_time = draft_state.initial_bonus_time,
+            background = draft_state.background,
+            background_url = draft_state.background_url
+        )
 
 
 class ChatSocketHandler(tornado.websocket.WebSocketHandler):
