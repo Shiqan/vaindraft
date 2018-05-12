@@ -1,6 +1,9 @@
 {% extends "_layout.html" %}
 
 {% block content %}
+{% if background == 'on' %}
+  <section class="draft-background-spec" style="background-image: url('{{background_url}}');"></section>
+{% end %}
 <section class="draft">
     <div class="row">
       <div class="column column-25">
@@ -22,13 +25,15 @@
       </div>
 
       <div class="column column-50">
-        {% for hero in heroes %}
-          {% include "components/hero.html" %}
+        {% if role != '0' %}
+          {% for hero in heroes %}
+            {% include "components/hero.html" %}
+          {% end %}
         {% end %}
       </div>
 
       <div class="column column-25">
-        <h1 class="title"> {{ team_red     }} </h1>
+        <h1 class="title"> {{ team_red }} </h1>
         {% for item in [i for i in draft_order if i['side'] == '2'] %}
           {% include "components/draft_item.html" %}
         {% end %}
@@ -40,5 +45,10 @@
 {% block js %}
 <script>
   const hash = "{{ hash }}";
+  {% if role == '1' %}
+    $(".navigation").addClass("team-left");
+  {% elif role == '2' %}
+    $(".navigation").addClass("team-right");
+  {% end %}
 </script>
 {% end %}

@@ -104,5 +104,16 @@ venv.bak/
 
 # End of https://www.gitignore.io/api/python
 
+
+
+# Created by https://www.gitignore.io/api/visualstudiocode
+
+### VisualStudioCode ###
+.vscode/*
+.history
+
+
+# End of https://www.gitignore.io/api/visualstudiocode
+
+
 *.log
-.vscode

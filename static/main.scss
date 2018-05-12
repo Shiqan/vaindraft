@@ -52,7 +52,6 @@ $team-right: #ff5945;
   box-sizing: border-box;
 }
 
-
 //
 // Extend Milligram
 //
@@ -139,6 +138,30 @@ $team-right: #ff5945;
    top:0;
    width:100%;
    z-index:1;
+
+   &.team-right {
+     background: $team-right;
+
+     .title {
+       color: #fff;
+     }
+
+     .octocat {
+       fill: $team-right;
+     }
+
+   }
+   &.team-left {
+     background: $team-left;
+
+     .title {
+       color: #fff;
+     }
+
+     .octocat {
+       fill: $team-left;
+     }
+   }
 }
 .navigation .container{
    padding-bottom:0;
@@ -459,6 +482,8 @@ textarea {
   }
 
   .hero-select {
+    position: relative;
+
     &.hero-highlight, &:hover{
       opacity: .75;
       transition: all 0.3s ease;
