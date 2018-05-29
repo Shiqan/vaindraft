@@ -49,6 +49,14 @@
         </div>
 
         <fieldset class="column">
+          <input id="customBackground" type="checkbox" name="customBackground"><label for="customBackground">Custom background?</label><br>
+        </fieldset>
+
+        <fieldset class="column" id="customBackgroundField" style="display: none;">
+          <input type="text" value="https://....png" name="customBackgroundField">
+        </fieldset>
+
+        <fieldset class="column">
           <input id="overrideHeroes" type="checkbox" name="overrideHeroes"><label for="overrideHeroes">Override Heroes?</label><br>
         </fieldset>
 
@@ -97,7 +105,7 @@
         </fieldset>
 
         <div class="column">
-          <input class="button button-outline" type="submit" value="Get Started">
+          <input id="submit" class="button button-outline" type="submit" value="Get Started">
         </div>
 
         {% module xsrf_form_html() %}
