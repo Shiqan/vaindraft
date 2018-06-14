@@ -1,45 +1,43 @@
 {% extends "_layout.html" %}
 
 {% block content %}
-{% if background == 'on' %}
-  <section class="draft-background-spec" style="background-image: url('{{background_url}}');"></section>
-{% end %}
-<section class="draft">
-    <div class="row">
-      <div class="column column-25">
-        <h1 id="bonustimer-1" class="title"> {{ bonus_time }} </h1>
+  {% if background == 'on' %}
+    <section class="draft-background-spec" style="background-image: url('{{background_url}}');"></section>
+  {% end %}
+  <section class="draft">
+      <div class="row">
+        <div class="column column-25">
+          <h1 id="bonustimer-1" class="title"> {{ bonus_time }} </h1>
+        </div>
+        <div class="column column-50">
+          <h1 id="timer" class="title"> {{ seconds_per_turn }} </h1>
+        </div>
+        <div class="column column-25">
+          <h1 id="bonustimer-2" class="title"> {{ bonus_time }} </h1>
+        </div>
       </div>
-      <div class="column column-50">
-        <h1 id="timer" class="title"> {{ seconds_per_turn }} </h1>
-      </div>
-      <div class="column column-25">
-        <h1 id="bonustimer-2" class="title"> {{ bonus_time }} </h1>
-      </div>
-    </div>
-    <div class="row">
-      <div class="column column-25">
-        <h1 class="title"> {{ team_blue }} </h1>
-        {% for item in [i for i in draft_order if i['side'] == '1'] %}
-          {% include "components/draft_item.html" %}
-        {% end %}
-      </div>
+      <div class="row">
+        <div class="column column-25">
+          <h1 class="title"> {{ team_blue }} </h1>
+          {% for item in [i for i in draft_order if i['side'] == '1'] %}
+            {% include "components/draft_item.html" %}
+          {% end %}
+        </div>
 
-      <div class="column column-50">
-        {% if role != '0' %}
+        <div class="column column-50">
           {% for hero in heroes %}
             {% include "components/hero.html" %}
           {% end %}
-        {% end %}
-      </div>
+        </div>
 
-      <div class="column column-25">
-        <h1 class="title"> {{ team_red }} </h1>
-        {% for item in [i for i in draft_order if i['side'] == '2'] %}
-          {% include "components/draft_item.html" %}
-        {% end %}
+        <div class="column column-25">
+          <h1 class="title"> {{ team_red }} </h1>
+          {% for item in [i for i in draft_order if i['side'] == '2'] %}
+            {% include "components/draft_item.html" %}
+          {% end %}
+        </div>
       </div>
-    </div>
-</section>
+  </section>
 {% end %}
 
 {% block js %}
