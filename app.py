@@ -48,6 +48,7 @@ class DraftState():
             '1': bonus_time,
             '2': bonus_time,
         }
+        self.ready_to_start = False
         self.started = False
         self.join_status = {
             '0': False,
@@ -71,7 +72,7 @@ class DraftState():
     def has_joined(self, team):
         self.join_status[team] = True
         if team == '0' and self.is_ready():
-            self.started = True
+            self.ready_to_start = True
 
     def get_join_status(self):
         return self.join_status
@@ -118,8 +119,14 @@ class DraftState():
     def is_ready(self):
         return self.is_joined('1') and self.is_joined('2')
 
+    def is_ready_to_start(self):
+        return self.ready_to_start
+
     def is_started(self):
         return self.started
+
+    def has_started(self):
+        self.started = True
 
     def is_turn(self, team):
         return self.get_current_team() == team
@@ -316,7 +323,6 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         draft_state.has_joined(self.role)
 
         if room in ChatSocketHandler.waiters:
-            # TODO fix for multiple spectators
             if (role == '1' or role == '2') and role in [client['role'] for client in ChatSocketHandler.waiters[room]]:
                 logging.info('Error: Role already specified')
                 self.send_update(self, self.create_message("error", "Role already specified"))
@@ -327,7 +333,8 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
                 message = draft_state.get_history()
                 self.send_update(self, self.create_message("history", message))
 
-                if draft_state.is_started():
+                if draft_state.is_ready_to_start() and not draft_state.is_started():
+                    draft_state.has_started()
                     self.send_updates(self.room, self.create_message("start", "Draft has started"))
                     draft_state.start_counter()
         else:
@@ -398,6 +405,10 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         Callback when the socket is closed. Frees up resource related to this socket.
         """
         if not self.room:
+            return
+
+        # TODO identify correct spectator to remove
+        if self.role == 'spec':
             return
 
         remove_clients = [client for client in self.waiters[self.room] if client['role'] == self.role]
